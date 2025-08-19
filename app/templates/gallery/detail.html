@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}{{ image.original_prompt[:50] }} - PikaCanvas{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body text-center">
+                <img src="{{ url_for('static', filename='images/' + image.filename) }}" 
+                     class="img-fluid rounded" style="max-height: 600px;" 
+                     alt="{{ image.original_prompt }}">
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Image Details</h5>
+                <form method="POST" action="{{ url_for('dashboard.toggle_favorite', image_id=image.id) }}" style="display: inline;">
+                    <button type="submit" class="btn btn-sm {% if image.is_favorite %}btn-warning{% else %}btn-outline-warning{% endif %}">
+                        <i class="fas fa-star"></i> {% if image.is_favorite %}Favorited{% else %}Favorite{% endif %}
+                    </button>
+                </form>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-4">Prompt:</dt>
+                    <dd class="col-sm-8">{{ image.original_prompt }}</dd>
+                    
+                    <dt class="col-sm-4">Provider:</dt>
+                    <dd class="col-sm-8">
+                        <span class="badge bg-primary">{{ image.provider }}</span>
+                    </dd>
+                    
+                    <dt class="col-sm-4">Model:</dt>
+                    <dd class="col-sm-8">{{ image.model }}</dd>
+                    
+                    <dt class="col-sm-4">Size:</dt>
+                    <dd class="col-sm-8">{{ image.size }}</dd>
+                    
+                    {% if image.style %}
+                    <dt class="col-sm-4">Style:</dt>
+                    <dd class="col-sm-8">{{ image.style }}</dd>
+                    {% endif %}
+                    
+                    <dt class="col-sm-4">Created:</dt>
+                    <dd class="col-sm-8">{{ image.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</dd>
+                    
+                    {% if image.file_size %}
+                    <dt class="col-sm-4">File Size:</dt>
+                    <dd class="col-sm-8">{{ "%.1f"|format(image.file_size / 1024) }} KB</dd>
+                    {% endif %}
+                </dl>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="card-title mb-0">Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('static', filename='images/' + image.filename) }}" 
+                       class="btn btn-outline-primary" download="{{ image.filename }}">
+                        <i class="fas fa-download me-1"></i>Download
+                    </a>
+                    
+                    <button type="button" class="btn btn-outline-secondary" onclick="copyImageUrl()">
+                        <i class="fas fa-copy me-1"></i>Copy URL
+                    </button>
+                    
+                    <button type="button" class="btn btn-outline-danger" onclick="deleteImage()">
+                        <i class="fas fa-trash me-1"></i>Delete Image
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="card-title mb-0">Share</h6>
+            </div>
+            <div class="card-body">
+                <div class="input-group">
+                    <input type="text" class="form-control" id="imageUrl" readonly 
+                           value="{{ request.url_root }}static/images/{{ image.filename }}">
+                    <button class="btn btn-outline-secondary" type="button" onclick="copyImageUrl()">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between">
+            <a href="{{ url_for('dashboard.gallery') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Back to Gallery
+            </a>
+            <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>Generate Another
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete this image? This action cannot be undone.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="{{ url_for('dashboard.delete_image', image_id=image.id) }}" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function copyImageUrl() {
+    const urlInput = document.getElementById('imageUrl');
+    urlInput.select();
+    document.execCommand('copy');
+    
+    // Show feedback
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-check"></i>';
+    btn.classList.add('btn-success');
+    btn.classList.remove('btn-outline-secondary');
+    
+    setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.classList.remove('btn-success');
+        btn.classList.add('btn-outline-secondary');
+    }, 2000);
+}
+
+function deleteImage() {
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+</script>
+{% endblock %}
