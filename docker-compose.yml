@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  pikacanvas:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_URL=sqlite:///pikacanvas.db
+      - FLASK_SECRET_KEY=change-this-in-production
+    volumes:
+      - ./data:/app/data
+      - ./app/static/images:/app/app/static/images
+    restart: unless-stopped
+    
+  # Optional: PostgreSQL for production
+  postgres:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=pikacanvas
+      - POSTGRES_USER=pikacanvas
+      - POSTGRES_PASSWORD=change-this-password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    profiles:
+      - production
+
+  # Optional: Redis for caching and sessions
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    profiles:
+      - production
+
+volumes:
+  postgres_data:

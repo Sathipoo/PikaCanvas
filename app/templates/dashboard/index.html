@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - PikaCanvas{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-magic me-2"></i>Generate New Image
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('dashboard.generate_image') }}">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="provider" class="form-label">AI Provider</label>
+                            <select class="form-select" id="provider" name="provider" required>
+                                <option value="">Select Provider</option>
+                                {% for provider in providers %}
+                                <option value="{{ provider }}">{{ provider.title() }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            <label for="size" class="form-label">Image Size</label>
+                            <select class="form-select" id="size" name="size">
+                                <option value="1024x1024">1024x1024</option>
+                                <option value="1792x1024">1792x1024</option>
+                                <option value="1024x1792">1024x1792</option>
+                                <option value="512x512">512x512</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            <label for="style" class="form-label">Style (Optional)</label>
+                            <select class="form-select" id="style" name="style">
+                                <option value="">Default</option>
+                                <option value="photographic">Photographic</option>
+                                <option value="digital-art">Digital Art</option>
+                                <option value="comic-book">Comic Book</option>
+                                <option value="fantasy-art">Fantasy Art</option>
+                                <option value="line-art">Line Art</option>
+                                <option value="analog-film">Analog Film</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="prompt" class="form-label">Prompt</label>
+                        <textarea class="form-control" id="prompt" name="prompt" rows="3" 
+                                placeholder="Describe the image you want to generate..." required></textarea>
+                        <div class="form-text">Be descriptive and specific for better results.</div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-wand-magic-sparkles me-2"></i>Generate Image
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>Quick Stats
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="border-end">
+                            <h3 class="text-primary">{{ current_user.images|length }}</h3>
+                            <small class="text-muted">Total Images</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <h3 class="text-success">{{ providers|length }}</h3>
+                        <small class="text-muted">AI Providers</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-info-circle me-2"></i>API Access
+                </h6>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted mb-2">Use our REST API for programmatic access:</p>
+                <code class="small">POST /api/v1/generate</code><br>
+                <code class="small">GET /api/v1/images</code>
+                <p class="small text-muted mt-2">Contact admin for API keys.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if recent_images %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-clock me-2"></i>Recent Images
+                </h5>
+                <a href="{{ url_for('dashboard.gallery') }}" class="btn btn-outline-primary btn-sm">
+                    View All <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for image in recent_images %}
+                    <div class="col-md-2 col-sm-4 col-6 mb-3">
+                        <div class="card h-100">
+                            <img src="{{ url_for('static', filename='images/' + image.filename) }}" 
+                                 class="card-img-top" style="height: 150px; object-fit: cover;" 
+                                 alt="{{ image.original_prompt[:50] }}">
+                            <div class="card-body p-2">
+                                <p class="card-text small text-truncate" title="{{ image.original_prompt }}">
+                                    {{ image.original_prompt[:30] }}...
+                                </p>
+                                <small class="text-muted">{{ image.provider }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
